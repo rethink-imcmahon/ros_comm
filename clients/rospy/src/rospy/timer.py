@@ -176,6 +176,7 @@ class Timer(threading.Thread):
         self._period   = period
         self._callback = callback
         self._oneshot  = oneshot
+        self._is_active = False
         self._shutdown = False
         self.setDaemon(True)
         self.start()
@@ -185,11 +186,18 @@ class Timer(threading.Thread):
         Stop firing callbacks.
         """
         self._shutdown = True
-        
+
+    def is_active(self):
+        """
+        Reports True if the timer has started
+        """
+        return self._is_active
+
     def run(self):
         r = Rate(1.0 / self._period.to_sec())
         current_expected = rospy.rostime.get_rostime() + self._period
         last_expected, last_real, last_duration = None, None, None
+        self._is_active = True
         while not rospy.core.is_shutdown() and not self._shutdown:
             r.sleep()
             if self._shutdown:
@@ -202,3 +210,4 @@ class Timer(threading.Thread):
             last_duration = time.time() - start
             last_expected, last_real = current_expected, current_real
             current_expected += self._period
+        self._is_active = False
