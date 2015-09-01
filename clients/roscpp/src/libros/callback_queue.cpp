@@ -366,7 +366,7 @@ CallbackQueue::CallOneResult CallbackQueue::callOneCB(TLS* tls)
   // made from the weak pointer, then the CallbackInterface was destroyed
   // in another thread. In that case, the callback is Invalid and should
   // not be executed.
-  CallbackInterfaceWPtr weak_cb = info.callback;
+  CallbackInterfacePtr cb = info.callback;
 
   IDInfoPtr id_info = getIDInfo(info.removal_id);
   if (id_info)
@@ -385,11 +385,7 @@ CallbackQueue::CallOneResult CallbackQueue::callOneCB(TLS* tls)
       else
       {
         tls->cb_it = tls->callbacks.erase(tls->cb_it);
-        // Create a scoped CallbackInterface shared ptr and execute the callback
-        if (CallbackInterfacePtr cb = weak_cb.lock())
-        {
-          result = cb->call();
-        }
+        result = cb->call();
       }
     }
     catch (std::exception&)
