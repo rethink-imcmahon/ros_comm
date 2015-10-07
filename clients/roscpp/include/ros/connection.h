@@ -144,12 +144,20 @@ public:
    */
   void write(const boost::shared_array<uint8_t>& buffer, uint32_t size, const WriteFinishedFunc& finished_callback, bool immedate = true);
 
-  typedef boost::signals2::signal<void(const ConnectionPtr&, DropReason reason)> DropSignal;
-  typedef boost::function<void(const ConnectionPtr&, DropReason reason)> DropFunc;
+  typedef boost::signals2::signal<void(const ConnectionPtr&, DropReason reason, const VoidConstPtr&)> DropSignal;
+  typedef boost::function<void(const ConnectionPtr&, DropReason reason, const VoidConstPtr&)> DropFunc;
   /**
    * \brief Add a callback to be called when this connection has dropped
+   *
+   * \note
+   * The boost signals2 library can maintain a reference to an object represented by
+   * shared pointers for the lifetime of the use of that object. This prevents the
+   * object from being destroyed external to the signal2::signal bound function
+   * during execution inside of that function. To track an object this way in
+   * addDropListener, use the definition with the tracked_object parameter.
    */
   boost::signals2::connection addDropListener(const DropFunc& slot);
+  boost::signals2::connection addDropListener(const DropFunc& slot, const VoidConstPtr& tracked_object);
   void removeDropListener(const boost::signals2::connection& c);
 
   /**
@@ -257,6 +265,10 @@ private:
 
   /// Signal raised when this connection is dropped
   DropSignal drop_signal_;
+
+  /// Tracked object for the drop_signal_ connection
+  VoidConstWPtr tracked_object_;
+  bool has_tracked_object_;
 
   /// Synchronizes drop() calls
   boost::recursive_mutex drop_mutex_;

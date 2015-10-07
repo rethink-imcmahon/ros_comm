@@ -64,7 +64,7 @@ public:
   virtual void drop();
 
 private:
-  void onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason);
+  void onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason, const VoidConstPtr& self);
   bool onHeaderReceived(const ConnectionPtr& conn, const Header& header);
 
   /**
@@ -80,6 +80,8 @@ private:
 
   ConnectionPtr connection_;
 
+  // Tracked object for the DropListener connection
+  boost::signals2::connection drop_handle_;
   int32_t retry_timer_handle_;
   bool needs_retry_;
   WallDuration retry_period_;

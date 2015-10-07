@@ -72,13 +72,14 @@ TransportPublisherLink::~TransportPublisherLink()
     getInternalTimerManager()->remove(retry_timer_handle_);
   }
 
+  connection_->removeDropListener(drop_handle_);
   connection_->drop(Connection::Destructing);
 }
 
 bool TransportPublisherLink::initialize(const ConnectionPtr& connection)
 {
   connection_ = connection;
-  connection_->addDropListener(boost::bind(&TransportPublisherLink::onConnectionDropped, this, _1, _2));
+  drop_handle_ = connection_->addDropListener(boost::bind(&TransportPublisherLink::onConnectionDropped, this, _1, _2, _3), shared_from_this());
 
   if (connection_->getTransport()->requiresHeader())
   {
@@ -240,7 +241,7 @@ void TransportPublisherLink::onRetryTimer(const ros::WallTimerEvent&)
 
 CallbackQueuePtr getInternalCallbackQueue();
 
-void TransportPublisherLink::onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason)
+void TransportPublisherLink::onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason, const VoidConstPtr& self)
 {
   if (dropping_)
   {
@@ -267,7 +268,7 @@ void TransportPublisherLink::onConnectionDropped(const ConnectionPtr& conn, Conn
       next_retry_ = WallTime::now() + retry_period_;
       retry_timer_handle_ = getInternalTimerManager()->add(WallDuration(retry_period_),
           boost::bind(&TransportPublisherLink::onRetryTimer, this, _1), getInternalCallbackQueue().get(),
-          VoidConstPtr(), false);
+          shared_from_this(), false);
     }
     else
     {

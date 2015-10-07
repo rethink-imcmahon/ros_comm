@@ -90,6 +90,13 @@ boost::signals2::connection Connection::addDropListener(const DropFunc& slot)
   return drop_signal_.connect(slot);
 }
 
+boost::signals2::connection Connection::addDropListener(const DropFunc& slot, const VoidConstPtr& tracked_object)
+{
+  boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+  tracked_object_ = tracked_object;
+  return drop_signal_.connect(slot);
+}
+
 void Connection::removeDropListener(const boost::signals2::connection& c)
 {
   boost::recursive_mutex::scoped_lock lock(drop_mutex_);
@@ -334,7 +341,20 @@ void Connection::drop(DropReason reason)
 
   if (did_drop)
   {
-    drop_signal_(shared_from_this(), reason);
+    if(has_tracked_object_)
+    {
+      // Hold the tracked object so it doesn't go away in the callback
+      VoidConstPtr tracked;
+      tracked = tracked_object_.lock();
+      if(tracked)
+      {
+        drop_signal_(shared_from_this(), reason, tracked);
+      }
+    }
+    else
+    {
+      drop_signal_(shared_from_this(), reason, VoidConstPtr());
+    }
     transport_->close();
   }
 }
