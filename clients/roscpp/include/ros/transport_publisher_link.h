@@ -80,8 +80,6 @@ private:
 
   ConnectionPtr connection_;
 
-  // Tracked object for the DropListener connection
-  boost::signals2::connection drop_handle_;
   int32_t retry_timer_handle_;
   bool needs_retry_;
   WallDuration retry_period_;

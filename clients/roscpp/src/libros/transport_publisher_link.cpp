@@ -72,14 +72,13 @@ TransportPublisherLink::~TransportPublisherLink()
     getInternalTimerManager()->remove(retry_timer_handle_);
   }
 
-  connection_->removeDropListener(drop_handle_);
   connection_->drop(Connection::Destructing);
 }
 
 bool TransportPublisherLink::initialize(const ConnectionPtr& connection)
 {
   connection_ = connection;
-  drop_handle_ = connection_->addDropListener(boost::bind(&TransportPublisherLink::onConnectionDropped, this, _1, _2, _3), shared_from_this());
+  connection_->addDropListener(boost::bind(&TransportPublisherLink::onConnectionDropped, this, _1, _2, _3), shared_from_this());
 
   if (connection_->getTransport()->requiresHeader())
   {
