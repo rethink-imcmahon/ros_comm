@@ -78,7 +78,7 @@ TransportPublisherLink::~TransportPublisherLink()
 bool TransportPublisherLink::initialize(const ConnectionPtr& connection)
 {
   connection_ = connection;
-  connection_->addDropListener(boost::bind(&TransportPublisherLink::onConnectionDropped, this, _1, _2, _3), shared_from_this());
+  connection_->addDropListener(Connection::DropSignal::slot_type(&TransportPublisherLink::onConnectionDropped, this, _1, _2).track(shared_from_this()));
 
   if (connection_->getTransport()->requiresHeader())
   {
@@ -240,7 +240,7 @@ void TransportPublisherLink::onRetryTimer(const ros::WallTimerEvent&)
 
 CallbackQueuePtr getInternalCallbackQueue();
 
-void TransportPublisherLink::onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason, const VoidConstPtr& self)
+void TransportPublisherLink::onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason)
 {
   if (dropping_)
   {

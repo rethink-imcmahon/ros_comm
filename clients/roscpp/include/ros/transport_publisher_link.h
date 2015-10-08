@@ -64,7 +64,7 @@ public:
   virtual void drop();
 
 private:
-  void onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason, const VoidConstPtr& self);
+  void onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason);
   bool onHeaderReceived(const ConnectionPtr& conn, const Header& header);
 
   /**
