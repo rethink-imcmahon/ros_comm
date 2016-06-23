@@ -359,8 +359,14 @@ CallbackQueue::CallOneResult CallbackQueue::callOneCB(TLS* tls)
   ROS_ASSERT(!tls->callbacks.empty());
   ROS_ASSERT(tls->cb_it != tls->callbacks.end());
 
-  CallbackInfo info = *tls->cb_it;
-  CallbackInterfacePtr& cb = info.callback;
+  // Alias the CallbackInfo object via reference (rather than copying it)
+  CallbackInfo& info = *tls->cb_it;
+  // Create a weak pointer from the CallbackInterface shared pointer.
+  // When ready to execute the callback, if a shared pointer fails to be
+  // made from the weak pointer, then the CallbackInterface was destroyed
+  // in another thread. In that case, the callback is Invalid and should
+  // not be executed.
+  CallbackInterfacePtr cb = info.callback;
 
   IDInfoPtr id_info = getIDInfo(info.removal_id);
   if (id_info)
